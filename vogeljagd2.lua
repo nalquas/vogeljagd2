@@ -35,6 +35,8 @@ SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
 SCREEN_HEIGHT = 136
 SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2
 AMMO_SIZE = 5
+INTRO_OFFSET = 60
+INTRO_CUTOFF = -120
 
 -- BEGIN GRAPHICS FUNCTIONS
 function background(color)
@@ -76,8 +78,9 @@ end
 function init()
 	t=0
 	shake = 0
-	mode = "title" -- Modes: "title", "game", "gameover"
+	mode = "intro" -- Modes: "intro", "title", "game", "gameover"
 	highscore = pmem(0)
+	intro_offset = INTRO_OFFSET
 end
 init()
 
@@ -94,7 +97,14 @@ function TIC()
 	cls(2)
 	
 	-- Select mode
-	if mode == "title" then
+	if mode == "intro" then
+		print_centered("Nalquas presents:", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF-8, 15, true, 2, false)
+		
+		intro_offset = intro_offset - 1
+		if intro_offset < INTRO_CUTOFF then
+			mode = "title"
+		end
+	elseif mode == "title" then
 		-- Version
 		print("Version as of " .. RELEASE_DATE, 1, 1, 15, true, 1, true)
 		
@@ -158,8 +168,15 @@ function TIC()
 end
 
 function scanline(row)
+	-- Intro effect
+	if intro_offset > 0 then
+		local factor = 1
+		if row % 2 == 0 then
+			factor = -1
+		end
+		poke(0x3FF9, factor * intro_offset) -- horizontal
 	-- Screen shake
-	if shake > 0 then
+	elseif shake > 0 then
 		poke(0x3FF9, math.random(-shake,shake)) -- horizontal
 		poke(0x3FFA, math.random(-shake,shake)) -- vertical
 	else
@@ -168,7 +185,8 @@ function scanline(row)
 	end
 	
 	-- Sky gradient (palette index 2)
-	poke(0x3fc6,64) --r
-	poke(0x3fc7,64+row) --g
-	poke(0x3fc8,200) --b
+	brightness = 1.0 - ((intro_offset-INTRO_CUTOFF) / (INTRO_OFFSET-INTRO_CUTOFF)) -- Intro fade-in
+	poke(0x3fc6, brightness * (64)) --r
+	poke(0x3fc7, brightness * (64+row)) --g
+	poke(0x3fc8, brightness * (200)) --b
 end
