@@ -75,6 +75,7 @@ end
 
 function init()
 	t=0
+	shake = 0
 	mode = "title" -- Modes: "title", "game", "gameover"
 	highscore = pmem(0)
 end
@@ -84,6 +85,7 @@ function prepare_game()
 	score = 0
 	ammo = AMMO_SIZE
 end
+
 function TIC()
 	update_mouse()
 	
@@ -113,7 +115,8 @@ function TIC()
 		end
 	elseif mode == "game" then
 		
-		if mdp() then
+		if mdp() and ammo > 0 then
+			shake = 5 -- Shake screen for 5 ticks
 			ammo = ammo - 1
 		end
 		
@@ -122,12 +125,16 @@ function TIC()
 			spr(318, 237-(i*16), 118, 0, 2, 0, 0, 1, 1) -- Ammo
 		end
 		if ammo < AMMO_SIZE then
-			for i = ammo, AMMO_SIZE do
+			for i = ammo+1, AMMO_SIZE do
 				if i > 0 then
 					spr(319, 237-(i*16), 118, 0, 2, 0, 0, 1, 1) -- Greyed out ammo
 				end
 			end
 		end
+		
+		-- Show score
+		print("Score: " .. score, 1, 1, 15, true, 1, true)
+		print_centered("Highscore: " .. highscore, SCREEN_WIDTH_HALF-1, 1, 15, true, 1, true)
 		
 		-- Show Targeting Cross
 		circb(mx, my, 3, 6)
@@ -140,14 +147,26 @@ function TIC()
 	end
 	
 	if DEBUG then
-		print("DEBUG:\nt=" .. t .. "\nammo=" .. ammo, SCREEN_WIDTH-32,1,15,true,1,true)
+		print("DEBUG:\nt=" .. t .. "\nammo=" .. tostring(ammo), SCREEN_WIDTH-32,1,15,true,1,true)
 	end
 	
 	-- End tick
+	if shake > 0 then
+		shake = shake - 1
+	end
 	t=t+1
 end
 
 function scanline(row)
+	-- Screen shake
+	if shake > 0 then
+		poke(0x3FF9, math.random(-shake,shake)) -- horizontal
+		poke(0x3FFA, math.random(-shake,shake)) -- vertical
+	else
+		poke(0x3FF9, 0)
+		poke(0x3FFA, 0)
+	end
+	
 	-- Sky gradient (palette index 2)
 	poke(0x3fc6,64) --r
 	poke(0x3fc7,64+row) --g
