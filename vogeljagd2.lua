@@ -28,7 +28,7 @@
 -- SOFTWARE.
 
 -- Constants
-DEBUG = true
+DEBUG = false
 RELEASE_DATE = "2020-07-30"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
@@ -101,8 +101,20 @@ function TIC()
 		print_centered("Nalquas presents:", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF-8, 15, true, 2, false)
 		
 		intro_offset = intro_offset - 1
-		if intro_offset < INTRO_CUTOFF then
+		if intro_offset > 0 then
+			-- Fade-in of sound
+			sfx(1, math.floor((1.0-(intro_offset / INTRO_OFFSET)) * 60), -1, 0, 15, 0)
+		elseif intro_offset == 0 then
+			-- Bell sound
+			sfx(0, "B-5", -1, 0, 15, 0)
+			sfx(0, "G#5", -1, 1, 15, -1)
+			sfx(0, "E-5", -1, 2, 15, -1)
+		elseif intro_offset < INTRO_CUTOFF then
 			mode = "title"
+			-- Stop all sound channels, should they still be running
+			for i=0,3 do
+				sfx(-1, 0, -1, i)
+			end
 		end
 	elseif mode == "title" then
 		-- Version
@@ -185,8 +197,11 @@ function scanline(row)
 	end
 	
 	-- Sky gradient (palette index 2)
-	brightness = 1.0 - ((intro_offset-INTRO_CUTOFF) / (INTRO_OFFSET-INTRO_CUTOFF)) -- Intro fade-in
-	poke(0x3fc6, brightness * (64)) --r
+	local brightness = 1.0
+	if intro_offset > 0 then
+		brightness = 1.0 - (intro_offset / INTRO_OFFSET) -- Intro fade-in
+	end
+	poke(0x3fc6, brightness * (64))     --r
 	poke(0x3fc7, brightness * (64+row)) --g
-	poke(0x3fc8, brightness * (200)) --b
+	poke(0x3fc8, brightness * (200))    --b
 end
