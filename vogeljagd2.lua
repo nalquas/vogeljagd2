@@ -3,7 +3,7 @@
 -- desc:   Shoot birds. Inspired by Moorhuhn.
 -- script: lua
 -- input:  mouse
--- saveid: TIC_Vogeljagd2
+-- saveid: TIC_Vogeljagd2_dev
 
 -- MIT License
 --
@@ -207,7 +207,13 @@ function TIC()
 		if #birds > 0 then
 			for i=1,#birds do
 				if birds[i].alive then
+					-- Movement
 					birds[i].x = birds[i].x + birds[i].speed_x
+					
+					-- Out of bounds? Kill.
+					if birds[i].x < -birds[i].size_x or birds[i].x > SCREEN_WIDTH then
+						birds[i].alive = false
+					end
 				end
 			end
 		end
@@ -216,6 +222,15 @@ function TIC()
 		if mdp() and ammo > 0 then
 			shake = 5 -- Shake screen for 5 ticks
 			ammo = ammo - 1
+			
+			-- Check for hits
+			for i=1,#birds do
+				if birds[i].alive and mouse_collision(birds[i]) then
+					-- Kill the bird on hit
+					birds[i].alive = false
+					score = score + (BIRD_MAX_CLOSENESS+1 - birds[i].closeness)
+				end
+			end
 		end
 		
 		-- Render birds, one closeness layer after the other
