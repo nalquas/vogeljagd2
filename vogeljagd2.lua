@@ -37,7 +37,7 @@ SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2
 AMMO_SIZE = 5
 INTRO_OFFSET = 60
 INTRO_CUTOFF = -120
-BIRD_MAX_DISTANCE = 3
+BIRD_MAX_CLOSENESS = 3
 
 -- BEGIN GRAPHICS FUNCTIONS
 	function background(color)
@@ -82,12 +82,12 @@ BIRD_MAX_DISTANCE = 3
 -- END INPUT FUNCTIONS
 
 -- BEGIN BIRD FUNCTIONS
-	function add_bird(x, y, distance, size_x, size_y, speed_x, base_sprite)
+	function add_bird(x, y, closeness, size_x, size_y, speed_x, base_sprite)
 		birds[#birds+1] = {
 			alive = true,
 			x = x or 0,
 			y = y or 0,
-			distance = distance or 1,
+			closeness = closeness or 1,
 			size_x = size_x or 8,
 			size_y = size_y or 8,
 			speed_x = speed_x or 0,
@@ -98,29 +98,32 @@ BIRD_MAX_DISTANCE = 3
 	function generate_bird()
 		local x, y
 		
-		-- Decide on distance (1=closest, 3=furthest)
-		local distance = math.random(1, BIRD_MAX_DISTANCE)
+		-- Decide on distance/closeness (1=furthest, 3=closest)
+		local closeness = math.random(1, BIRD_MAX_CLOSENESS)
 		
 		-- Set size based on distance
-		local size_x = (BIRD_MAX_DISTANCE+1 - distance) * 8
+		local size_x = closeness * 8
 		local size_y = size_x -- square
 		
 		-- Set speed based on distance
-		--local speed_x = math.random()
+		--local speed_x = 0.25 + math.random()
 		local speed_x = 0
 		
 		-- Decide: left or right?
 		if math.random() < 0.5 then
-			x = -size_x
+			-- Go right
+			x = -size_x -- spawn left
 		else
-			x = SCREEN_WIDTH
+			-- Go left
+			x = SCREEN_WIDTH -- spawn right
+			speed_x = -speed_x -- invert speed_x to go left
 		end
 		
 		-- Select a random base sprite
 		local base_sprite = 304 + math.random(0,3)*3
 		
 		-- Commit bird
-		add_bird(x, y, distance, size_x, size_y, speed_x, base_sprite)
+		add_bird(x, y, closeness, size_x, size_y, speed_x, base_sprite)
 	end
 -- END BIRD FUNCTIONS
 
@@ -206,7 +209,7 @@ function TIC()
 		-- Render birds
 		if #birds > 0 then
 			for i=1,#birds do
-				spr(birds[i].base_sprite, birds[i].x, birds[i].y, 15, birds[i].size_x/8, 0, 0, 1, 1)
+				spr(birds[i].base_sprite, birds[i].x, birds[i].y, 15, birds[i].closeness, 0, 0, 1, 1)
 			end
 		end
 		
