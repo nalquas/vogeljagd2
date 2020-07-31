@@ -29,7 +29,7 @@
 
 -- Constants
 DEBUG = false
-RELEASE_DATE = "2020-07-30"
+RELEASE_DATE = "2020-07-31"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
 SCREEN_HEIGHT = 136
@@ -37,43 +37,92 @@ SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2
 AMMO_SIZE = 5
 INTRO_OFFSET = 60
 INTRO_CUTOFF = -120
+BIRD_MAX_DISTANCE = 3
 
 -- BEGIN GRAPHICS FUNCTIONS
-function background(color)
-	poke(0x03FF8, color)
-end
+	function background(color)
+		poke(0x03FF8, color)
+	end
 
-function print_centered(text, x, y, color, fixed, scale, smallfont)
-	x = x or 0
-	y = y or 0
-	color = color or 15
-	fixed = fixed or false
-	scale = scale or 1
-	smallfont = smallfont or false
-	
-	-- Print off-screen to get width
-	local width = print(text, 0, -64, color, fixed, scale, smallfont)
-	
-	-- Print at proper position, but centered
-	print(text, x - (width / 2), y, color, fixed, scale, smallfont)
-	
-	return width
-end
+	function print_centered(text, x, y, color, fixed, scale, smallfont)
+		x = x or 0
+		y = y or 0
+		color = color or 15
+		fixed = fixed or false
+		scale = scale or 1
+		smallfont = smallfont or false
+		
+		-- Print off-screen to get width
+		local width = print(text, 0, -64, color, fixed, scale, smallfont)
+		
+		-- Print at proper position, but centered
+		print(text, x - (width / 2), y, color, fixed, scale, smallfont)
+		
+		return width
+	end
 -- END GRAPHICS FUNCTIONS
 
 -- BEGIN INPUT FUNCTIONS
-function update_mouse()
-	mx_last = mx or 0
-	my_last = my or 0
-	md_last = md or false
-	mx,my,md = mouse()
-end
+	function update_mouse()
+		mx_last = mx or 0
+		my_last = my or 0
+		md_last = md or false
+		mx,my,md = mouse()
+	end
 
-function mdp()
-	-- Has the mouse button been pressed?
-	return (md and not md_last)
-end
+	-- Has the mouse button been pressed this tick?
+	function mdp()
+		return (md and not md_last)
+	end
+
+	-- Check if the mouse is colliding with a given object. Needs to contain the parameters x, y, size_x, size_y
+	function mouse_collision(object)
+		return (mx >= object.x and mx < object.x+object.size_x and my >= object.y and my < object.y+object.size_y)
+	end
 -- END INPUT FUNCTIONS
+
+-- BEGIN BIRD FUNCTIONS
+	function add_bird(x, y, distance, size_x, size_y, speed_x, base_sprite)
+		birds[#birds+1] = {
+			alive = true,
+			x = x or 0,
+			y = y or 0,
+			distance = distance or 1,
+			size_x = size_x or 8,
+			size_y = size_y or 8,
+			speed_x = speed_x or 0,
+			base_sprite = base_sprite or 304
+			}
+	end
+	
+	function generate_bird()
+		local x, y
+		
+		-- Decide on distance (1=closest, 3=furthest)
+		local distance = math.random(1, BIRD_MAX_DISTANCE)
+		
+		-- Set size based on distance
+		local size_x = (BIRD_MAX_DISTANCE+1 - distance) * 8
+		local size_y = size_x -- square
+		
+		-- Set speed based on distance
+		--local speed_x = math.random()
+		local speed_x = 0
+		
+		-- Decide: left or right?
+		if math.random() < 0.5 then
+			x = -size_x
+		else
+			x = SCREEN_WIDTH
+		end
+		
+		-- Select a random base sprite
+		local base_sprite = 304 + math.random(0,3)*3
+		
+		-- Commit bird
+		add_bird(x, y, distance, size_x, size_y, speed_x, base_sprite)
+	end
+-- END BIRD FUNCTIONS
 
 function init()
 	t=0
@@ -87,6 +136,8 @@ init()
 function prepare_game()
 	score = 0
 	ammo = AMMO_SIZE
+	birds = {}
+	add_bird()
 end
 
 function TIC()
@@ -137,9 +188,26 @@ function TIC()
 		end
 	elseif mode == "game" then
 		
+		-- Process birds
+		if #birds > 0 then
+			for i=1,#birds do
+				if birds[i].alive then
+					birds[i].x = birds[i].x + birds[i].speed_x
+				end
+			end
+		end
+		
+		-- Process shooting
 		if mdp() and ammo > 0 then
 			shake = 5 -- Shake screen for 5 ticks
 			ammo = ammo - 1
+		end
+		
+		-- Render birds
+		if #birds > 0 then
+			for i=1,#birds do
+				spr(birds[i].base_sprite, birds[i].x, birds[i].y, 15, birds[i].size_x/8, 0, 0, 1, 1)
+			end
 		end
 		
 		-- Show ammo
@@ -161,6 +229,7 @@ function TIC()
 		-- Show Targeting Cross
 		circb(mx, my, 3, 6)
 		circ(mx, my, 1, 6)
+		
 	elseif mode == "gameover" then
 		
 	else
