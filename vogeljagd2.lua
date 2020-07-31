@@ -96,20 +96,22 @@ BIRD_MAX_CLOSENESS = 3
 	end
 	
 	function generate_bird()
-		local x, y
+		-- Decide on distance/closeness
+		local closeness = math.random(1, BIRD_MAX_CLOSENESS) -- (1=furthest, 3=closest)
+		local distance = BIRD_MAX_CLOSENESS + 1 - closeness -- ...the opposite
 		
-		-- Decide on distance/closeness (1=furthest, 3=closest)
-		local closeness = math.random(1, BIRD_MAX_CLOSENESS)
-		
-		-- Set size based on distance
+		-- Set size based on closeness
 		local size_x = closeness * 8
 		local size_y = size_x -- square
 		
 		-- Set speed based on distance
-		--local speed_x = 0.25 + math.random()
-		local speed_x = 0
+		local speed_x = (0.16666667 + math.random()/6.0) * closeness -- Anywhere from 1/6 to 1/3, multiplied by closeness
+		
+		-- Set y randomly, but also based on distance
+		local y = math.random(0, math.floor(SCREEN_HEIGHT / distance) - size_y)
 		
 		-- Decide: left or right?
+		local x
 		if math.random() < 0.5 then
 			-- Go right
 			x = -size_x -- spawn left
@@ -124,6 +126,14 @@ BIRD_MAX_CLOSENESS = 3
 		
 		-- Commit bird
 		add_bird(x, y, closeness, size_x, size_y, speed_x, base_sprite)
+	end
+	
+	function render_bird(bird)
+		local flip = 0
+		if bird.speed_x < 0 then
+			flip = 1
+		end
+		spr(bird.base_sprite + ((t/8)%3), bird.x, bird.y, 15, bird.closeness, flip, 0, 1, 1)
 	end
 -- END BIRD FUNCTIONS
 
@@ -140,7 +150,9 @@ function prepare_game()
 	score = 0
 	ammo = AMMO_SIZE
 	birds = {}
-	add_bird()
+	for i = 1, 1024 do
+		generate_bird()
+	end
 end
 
 function TIC()
@@ -206,10 +218,14 @@ function TIC()
 			ammo = ammo - 1
 		end
 		
-		-- Render birds
+		-- Render birds, one closeness layer after the other
 		if #birds > 0 then
-			for i=1,#birds do
-				spr(birds[i].base_sprite, birds[i].x, birds[i].y, 15, birds[i].closeness, 0, 0, 1, 1)
+			for closeness=1,BIRD_MAX_CLOSENESS do -- iterate through the layers
+				for i=1,#birds do -- iterate over all birds
+					if birds[i].alive and birds[i].closeness == closeness then -- only render birds from this layer
+						render_bird(birds[i])
+					end
+				end
 			end
 		end
 		
