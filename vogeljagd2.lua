@@ -85,6 +85,7 @@ BIRD_MAX_CLOSENESS = 3
 	function add_bird(x, y, closeness, size_x, size_y, speed_x, base_sprite)
 		birds[#birds+1] = {
 			alive = true,
+			hit_ground = false,
 			x = x or 0,
 			y = y or 0,
 			closeness = closeness or 1,
@@ -129,11 +130,27 @@ BIRD_MAX_CLOSENESS = 3
 	end
 	
 	function render_bird(bird)
-		local flip = 0
-		if bird.speed_x < 0 then
-			flip = 1
+		if bird.alive or not bird.hit_ground then
+			-- Direction (left/right)
+			local flip = 0
+			if bird.speed_x < 0 then
+				flip = 1
+			end
+			
+			-- Dead or alive
+			local rotation = 0
+			if not bird.alive then
+				rotation = 1 -- face downwards
+			end
+			
+			-- Animation
+			local sprite_offset = ((t/8)%3)
+			if not bird.alive then
+				sprite_offset = 0 -- dead birds don't move
+			end
+			
+			spr(bird.base_sprite + sprite_offset, bird.x, bird.y, 15, bird.closeness, flip, rotation, 1, 1)
 		end
-		spr(bird.base_sprite + ((t/8)%3), bird.x, bird.y, 15, bird.closeness, flip, 0, 1, 1)
 	end
 -- END BIRD FUNCTIONS
 
@@ -214,6 +231,11 @@ function TIC()
 					if birds[i].x < -birds[i].size_x or birds[i].x > SCREEN_WIDTH then
 						birds[i].alive = false
 					end
+				elseif not birds[i].hit_ground then
+					birds[i].y = birds[i].y + birds[i].closeness
+					if birds[i].y > SCREEN_HEIGHT then
+						birds[i].hit_ground = true
+					end
 				end
 			end
 		end
@@ -237,7 +259,7 @@ function TIC()
 		if #birds > 0 then
 			for closeness=1,BIRD_MAX_CLOSENESS do -- iterate through the layers
 				for i=1,#birds do -- iterate over all birds
-					if birds[i].alive and birds[i].closeness == closeness then -- only render birds from this layer
+					if birds[i].closeness == closeness then -- only render birds from this layer
 						render_bird(birds[i])
 					end
 				end
