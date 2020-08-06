@@ -80,6 +80,7 @@ BIRD_MAX_CLOSENESS = 3
 
 	-- Check if the mouse is colliding with a given object. Needs to contain the parameters x, y, size_x, size_y
 	function mouse_collision(object)
+		local mx = mx + camera_pos
 		return (mx >= object.x and mx < object.x+object.size_x and my >= object.y and my < object.y+object.size_y)
 	end
 -- END INPUT FUNCTIONS
@@ -152,7 +153,7 @@ BIRD_MAX_CLOSENESS = 3
 				sprite_offset = 0 -- dead birds don't move
 			end
 			
-			spr(bird.base_sprite + sprite_offset, bird.x, bird.y, 15, bird.closeness, flip, rotation, 1, 1)
+			spr(bird.base_sprite + sprite_offset, bird.x - camera_pos, bird.y, 15, bird.closeness, flip, rotation, 1, 1)
 		end
 	end
 -- END BIRD FUNCTIONS
@@ -247,7 +248,7 @@ function TIC()
 					birds[i].x = birds[i].x + birds[i].speed_x
 					
 					-- Out of bounds? Kill.
-					if birds[i].x < -birds[i].size_x or birds[i].x > SCREEN_WIDTH then
+					if birds[i].x < -birds[i].size_x or birds[i].x > GAME_WIDTH then
 						birds[i].alive = false
 					end
 				elseif not birds[i].hit_ground then
