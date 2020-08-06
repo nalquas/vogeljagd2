@@ -28,12 +28,15 @@
 -- SOFTWARE.
 
 -- Constants
-DEBUG = false
-RELEASE_DATE = "2020-07-31"
+DEBUG = true
+RELEASE_DATE = "2020-08-06"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
 SCREEN_HEIGHT = 136
 SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2
+GAME_WIDTH = 1200 -- SCREEN_WIDTH * 5
+CAMERA_POS_MAX = GAME_WIDTH - SCREEN_WIDTH
+CAMERA_SPEED = 15
 AMMO_SIZE = 5
 INTRO_OFFSET = 60
 INTRO_CUTOFF = -120
@@ -170,6 +173,7 @@ function prepare_game()
 	for i = 1, 1024 do
 		generate_bird()
 	end
+	camera_pos = CAMERA_POS_MAX / 2
 end
 
 function TIC()
@@ -181,9 +185,11 @@ function TIC()
 	
 	-- Select mode
 	if mode == "intro" then
+		-- Rendering
 		print_centered("Nalquas presents:", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF-8, 15, true, 2, false)
 		
-		intro_offset = intro_offset - 1
+		-- Events
+		intro_offset = intro_offset - 1 -- Timer and, simultaneously, offset used in scanline()
 		if intro_offset > 0 then
 			-- Fade-in of sound
 			sfx(1, math.floor((1.0-(intro_offset / INTRO_OFFSET)) * 60), -1, 0, 15, 0)
@@ -219,6 +225,19 @@ function TIC()
 			mode = "game"
 		end
 	elseif mode == "game" then
+		
+		-- Camera movement
+		if mx < 5 or btn(2) then
+			camera_pos = camera_pos - CAMERA_SPEED
+			if camera_pos < 0 then
+				camera_pos = 0
+			end
+		elseif mx > SCREEN_WIDTH - 5 or btn(3) then
+			camera_pos = camera_pos + CAMERA_SPEED
+			if camera_pos > CAMERA_POS_MAX then
+				camera_pos = CAMERA_POS_MAX
+			end
+		end
 		
 		-- Process birds
 		if #birds > 0 then
@@ -266,6 +285,13 @@ function TIC()
 			end
 		end
 		
+		-- Show position of screen on map (as a rectangle on a line)
+		local rect_width = (SCREEN_WIDTH / GAME_WIDTH) * SCREEN_WIDTH
+		local rect_pos = (camera_pos / CAMERA_POS_MAX) * (SCREEN_WIDTH-rect_width)
+		line(0, SCREEN_HEIGHT-7, rect_pos, SCREEN_HEIGHT-7, 15) -- map (left)
+		line(rect_pos + rect_width, SCREEN_HEIGHT-7, SCREEN_WIDTH-1, SCREEN_HEIGHT-7, 15) -- map (right)
+		rectb(rect_pos, SCREEN_HEIGHT-13, rect_width, 13, 15) -- screen
+		
 		-- Show ammo
 		for i = 1, ammo do
 			spr(318, 237-(i*16), 118, 0, 2, 0, 0, 1, 1) -- Ammo
@@ -294,7 +320,7 @@ function TIC()
 	end
 	
 	if DEBUG then
-		print("DEBUG:\nt=" .. t .. "\nammo=" .. tostring(ammo), SCREEN_WIDTH-32,1,15,true,1,true)
+		print("DEBUG:\nt=" .. t .. "\nmx=" .. mx .. "\nmy=" .. my .. "\nammo=" .. tostring(ammo) .. "\ncam=" .. tostring(camera_pos), SCREEN_WIDTH-32,1,15,true,1,true)
 	end
 	
 	-- End tick
@@ -306,7 +332,7 @@ end
 
 function scanline(row)
 	-- Intro effect
-	if intro_offset > 0 then
+	if intro_offset > 0 and row > 59 and row < 76 then
 		local factor = 1
 		if row % 2 == 0 then
 			factor = -1
