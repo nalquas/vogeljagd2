@@ -37,8 +37,9 @@ SCREEN_HEIGHT = 136
 SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2
 GAME_WIDTH = 1200 -- SCREEN_WIDTH * 5
 CAMERA_POS_MAX = GAME_WIDTH - SCREEN_WIDTH
-CAMERA_SPEED = 15
+CAMERA_SPEED = 10
 AMMO_SIZE = 5
+CLOUD_COUNT = 128
 INTRO_OFFSET = 60
 INTRO_CUTOFF = -120
 BIRD_MAX_CLOSENESS = 3
@@ -128,6 +129,41 @@ BIRD_MAX_CLOSENESS = 3
 	end
 -- END INPUT FUNCTIONS
 
+-- BEGIN CLOUD FUNCTIONS
+	function add_cloud(id, x, y, scale, speed_x)
+		clouds[#clouds+1] = {
+			id = id or 256,
+			x = x or 0,
+			y = y or 0,
+			w = 8,
+			h = 3,
+			scale = scale or 1,
+			speed_x = speed_x or 0
+			}
+	end
+	
+	function generate_cloud(scale)
+		local cloud_width = scale * 8 * 8 -- the last 8 is w
+		local cloud_x_max = GAME_WIDTH * scale + cloud_width
+		
+		-- Place at a random position
+		local x = math.random(math.floor(-cloud_width), math.floor(cloud_x_max))
+		local y = SCREEN_HEIGHT_HALF - scale*SCREEN_HEIGHT_HALF
+		
+		-- Set speed
+		--local speed_x = 0.5 * scale * (math.random()*2.0 - 1.0)
+		--if speed_x == 0 then speed_x = 0.1 end
+		local speed_x = scale * 0.1
+		
+		-- Commit cloud
+		add_cloud(id, x, y, scale, speed_x)
+	end
+	
+	function render_cloud(cloud)
+		spr_scaled(cloud.id, cloud.x-(camera_pos*cloud.scale), cloud.y, 0, cloud.scale, cloud.w, cloud.h)
+	end
+-- END CLOUD FUNCTIONS
+
 -- BEGIN BIRD FUNCTIONS
 	function add_bird(x, y, closeness, size_x, size_y, speed_x, base_sprite)
 		birds[#birds+1] = {
@@ -216,6 +252,10 @@ function prepare_game()
 	birds = {}
 	for i = 1, 1024 do
 		generate_bird()
+	end
+	clouds = {}
+	for i = 1, CLOUD_COUNT do
+		generate_cloud(0.25 + 0.75 * (i / CLOUD_COUNT))
 	end
 	camera_pos = CAMERA_POS_MAX / 2
 end
@@ -315,6 +355,21 @@ function TIC()
 					birds[i].alive = false
 					score = score + (BIRD_MAX_CLOSENESS+1 - birds[i].closeness)
 				end
+			end
+		end
+		
+		-- Render (and process) clouds
+		if #clouds > 0 then
+			for i=1,#clouds do
+				clouds[i].x = clouds[i].x + clouds[i].speed_x
+				local cloud_width = clouds[i].scale * 8 * clouds[i].w
+				local cloud_x_max = GAME_WIDTH * clouds[i].scale + cloud_width
+				if clouds[i].x > cloud_x_max then
+					clouds[i].x = -cloud_width
+				elseif clouds[i].x < -cloud_width then
+					clouds[i].x = cloud_x_max
+				end
+				render_cloud(clouds[i])
 			end
 		end
 		
