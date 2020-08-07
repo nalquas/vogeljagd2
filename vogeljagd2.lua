@@ -143,6 +143,12 @@ BIRD_MAX_CLOSENESS = 3
 	end
 	
 	function generate_cloud(scale)
+		-- Select random sprite
+		local id = 256
+		if math.random() < 0.5 then
+			id = 264
+		end
+		
 		local cloud_width = scale * 8 * 8 -- the last 8 is w
 		local cloud_x_max = (GAME_WIDTH + SCREEN_WIDTH) * (scale + 0.08) + cloud_width -- DON'T TOUCH X_MAX!
 		
