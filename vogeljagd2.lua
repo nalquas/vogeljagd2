@@ -144,7 +144,7 @@ BIRD_MAX_CLOSENESS = 3
 	
 	function generate_cloud(scale)
 		local cloud_width = scale * 8 * 8 -- the last 8 is w
-		local cloud_x_max = GAME_WIDTH * scale + cloud_width
+		local cloud_x_max = (GAME_WIDTH + SCREEN_WIDTH) * (scale + 0.08) + cloud_width -- DON'T TOUCH X_MAX!
 		
 		-- Place at a random position
 		local x = math.random(math.floor(-cloud_width), math.floor(cloud_x_max))
@@ -363,7 +363,7 @@ function TIC()
 			for i=1,#clouds do
 				clouds[i].x = clouds[i].x + clouds[i].speed_x
 				local cloud_width = clouds[i].scale * 8 * clouds[i].w
-				local cloud_x_max = GAME_WIDTH * clouds[i].scale + cloud_width
+				local cloud_x_max = (GAME_WIDTH + SCREEN_WIDTH) * (clouds[i].scale + 0.08) + cloud_width -- DON'T TOUCH X_MAX!
 				if clouds[i].x > cloud_x_max then
 					clouds[i].x = -cloud_width
 				elseif clouds[i].x < -cloud_width then
