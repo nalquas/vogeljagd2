@@ -29,7 +29,7 @@
 
 -- Constants
 DEBUG = true
-RELEASE_DATE = "2020-08-07"
+RELEASE_DATE = "2020-08-08"
 RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
@@ -207,7 +207,7 @@ BIRD_MAX_CLOSENESS = 3
 			x = -size_x -- spawn left
 		else
 			-- Go left
-			x = SCREEN_WIDTH -- spawn right
+			x = GAME_WIDTH -- spawn right
 			speed_x = -speed_x -- invert speed_x to go left
 		end
 		
@@ -256,9 +256,6 @@ function prepare_game()
 	score = 0
 	ammo = AMMO_SIZE
 	birds = {}
-	for i = 1, 1024 do
-		generate_bird()
-	end
 	clouds = {}
 	for i = 1, CLOUD_COUNT do
 		generate_cloud(0.25 + 0.75 * (i / CLOUD_COUNT))
@@ -327,6 +324,11 @@ function TIC()
 			if camera_pos > CAMERA_POS_MAX then
 				camera_pos = CAMERA_POS_MAX
 			end
+		end
+		
+		-- Spawn birds
+		if math.random() < 0.025 then
+			generate_bird()
 		end
 		
 		-- Process birds
