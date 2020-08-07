@@ -29,7 +29,8 @@
 
 -- Constants
 DEBUG = true
-RELEASE_DATE = "2020-08-06"
+RELEASE_DATE = "2020-08-07"
+RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
 SCREEN_HEIGHT = 136
@@ -62,6 +63,48 @@ BIRD_MAX_CLOSENESS = 3
 		print(text, x - (width / 2), y, color, fixed, scale, smallfont)
 		
 		return width
+	end
+	
+	function spr_scaled(id, x, y, colorkey, scale, w, h)
+		colorkey = colorkey or -1
+		scale = scale or 1
+		w = w or 1
+		h = h or 1
+		
+		-- A B
+		--
+		-- D C
+		-- ax ay bx by cx cy au av bu bv cu cv
+
+		ax=x
+		ay=y
+
+		bx=x+(w*8*scale)
+		by=y
+
+		cx=x+(w*8*scale)
+		cy=y+(h*8*scale)
+
+		dx=x
+		dy=y+(h*8*scale)
+
+		uFactor=((id%16)*8)
+		vFactor=math.floor(id/16)*8
+
+		au=uFactor
+		av=vFactor
+
+		bu=uFactor+(w*8)
+		bv=vFactor
+
+		cu=uFactor+(w*8)
+		cv=vFactor+(h*8)
+
+		du=uFactor
+		dv=vFactor+(h*8)
+		
+		textri(ax,ay,bx,by,cx,cy,au,av,bu,bv,cu,cv,false,colorkey)
+		textri(ax,ay,dx,dy,cx,cy,au,av,du,dv,cu,cv,false,colorkey)
 	end
 -- END GRAPHICS FUNCTIONS
 
@@ -208,7 +251,7 @@ function TIC()
 		end
 	elseif mode == "title" then
 		-- Version
-		print("Version as of " .. RELEASE_DATE, 1, 1, 15, true, 1, true)
+		print("Version as of " .. RELEASE_DATE .. "\nfor " .. RELEASE_TARGET, 1, 1, 15, true, 1, true)
 		
 		-- Title
 		print_centered("Vogeljagd 2", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT/3, 15, true, 2, false)
