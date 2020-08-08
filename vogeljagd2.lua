@@ -390,6 +390,12 @@ function TIC()
 			end
 		end
 		
+		-- Render sun
+		local sun_x = 200 - (camera_pos * 0.05)
+		--circ(sun_x, 15, 3, 9) --outer
+		--circ(sun_x, 15, 2, 14) -- inner
+		spr(316, sun_x, 15, 0, 1, 0, 0, 1, 1)
+		
 		-- Render (and process) clouds
 		if #clouds > 0 then
 			for i=1,#clouds do
@@ -424,6 +430,9 @@ function TIC()
 		rectb(rect_pos, SCREEN_HEIGHT-13, rect_width, 13, 15) -- screen
 		
 		-- Show ammo
+		for i = 1, AMMO_SIZE do
+			spr(317, 238-(i*16), 119, 15, 2, 0, 0, 1, 1) -- Shadow
+		end
 		for i = 1, ammo do
 			spr(318, 237-(i*16), 118, 0, 2, 0, 0, 1, 1) -- Ammo
 		end
