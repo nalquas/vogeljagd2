@@ -36,6 +36,7 @@ SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
 SCREEN_HEIGHT = 136
 SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2
 GAME_WIDTH = 1200 -- SCREEN_WIDTH * 5
+GAME_TIME = 3600 --60sec
 CAMERA_POS_MAX = GAME_WIDTH - SCREEN_WIDTH
 CAMERA_SPEED = 10
 AMMO_SIZE = 5
@@ -48,8 +49,8 @@ BIRD_MAX_CLOSENESS = 3
 	function background(color)
 		poke(0x03FF8, color)
 	end
-
-	function print_centered(text, x, y, color, fixed, scale, smallfont)
+	
+	function print_shadowed(text, x, y, color, fixed, scale, smallfont)
 		x = x or 0
 		y = y or 0
 		color = color or 15
@@ -57,11 +58,28 @@ BIRD_MAX_CLOSENESS = 3
 		scale = scale or 1
 		smallfont = smallfont or false
 		
+		print(text, x+1, y+1, 0, fixed, scale, smallfont) -- Shadow
+		print(text, x, y, color, fixed, scale, smallfont) -- Main
+	end
+
+	function print_centered(text, x, y, color, fixed, scale, smallfont, shadowed)
+		x = x or 0
+		y = y or 0
+		color = color or 15
+		fixed = fixed or false
+		scale = scale or 1
+		smallfont = smallfont or false
+		shadowed = shadowed or false
+		
 		-- Print off-screen to get width
 		local width = print(text, 0, -64, color, fixed, scale, smallfont)
 		
 		-- Print at proper position, but centered
-		print(text, x - (width / 2), y, color, fixed, scale, smallfont)
+		if shadowed then
+			print_shadowed(text, x - (width / 2), y, color, fixed, scale, smallfont)
+		else
+			print(text, x - (width / 2), y, color, fixed, scale, smallfont)
+		end
 		
 		return width
 	end
@@ -157,9 +175,7 @@ BIRD_MAX_CLOSENESS = 3
 		local y = SCREEN_HEIGHT_HALF - scale*SCREEN_HEIGHT_HALF
 		
 		-- Set speed
-		--local speed_x = 0.5 * scale * (math.random()*2.0 - 1.0)
-		--if speed_x == 0 then speed_x = 0.1 end
-		local speed_x = scale * 0.1
+		local speed_x = (scale^2) * 0.1
 		
 		-- Commit cloud
 		add_cloud(id, x, y, scale, speed_x)
@@ -261,6 +277,7 @@ function prepare_game()
 		generate_cloud(0.25 + 0.75 * (i / CLOUD_COUNT))
 	end
 	camera_pos = CAMERA_POS_MAX / 2
+	t_game = GAME_TIME
 end
 
 function TIC()
@@ -273,7 +290,7 @@ function TIC()
 	-- Select mode
 	if mode == "intro" then
 		-- Rendering
-		print_centered("Nalquas presents:", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF-8, 15, true, 2, false)
+		print_centered("Nalquas presents:", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF-8, 15, true, 2, false, true)
 		
 		-- Events
 		intro_offset = intro_offset - 1 -- Timer and, simultaneously, offset used in scanline()
@@ -294,17 +311,17 @@ function TIC()
 		end
 	elseif mode == "title" then
 		-- Version
-		print("Version as of " .. RELEASE_DATE .. "\nfor " .. RELEASE_TARGET, 1, 1, 15, true, 1, true)
+		print_shadowed("Version as of " .. RELEASE_DATE .. "\nfor " .. RELEASE_TARGET, 1, 1, 15, true, 1, true)
 		
 		-- Title
-		print_centered("Vogeljagd 2", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT/3, 15, true, 2, false)
+		print_centered("Vogeljagd 2", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT/3, 15, true, 2, false, true)
 		
 		-- Instructions
-		print_centered("Click to begin", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF, 15, true, 1, true)
+		print_centered("Click to begin", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF, 15, true, 1, true, true)
 		
 		-- Credits / Copyright notice
-		print_centered("(C) Nalquas, 2020", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT-16, 15, true, 1, true)
-		print_centered("Licensed under the MIT license", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT-8, 15, true, 1, true)
+		print_centered("(C) Nalquas, 2020", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT-16, 15, true, 1, true, true)
+		print_centered("Licensed under the MIT license", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT-8, 15, true, 1, true, true)
 		
 		-- Handle input
 		if mdp() then
@@ -312,6 +329,13 @@ function TIC()
 			mode = "game"
 		end
 	elseif mode == "game" then
+		
+		-- Handle game time
+		if t_game <= 0 then
+			mode = "gameover"
+		else
+			t_game = t_game - 1
+		end
 		
 		-- Camera movement
 		if mx < 5 or btn(2) then
@@ -412,8 +436,8 @@ function TIC()
 		end
 		
 		-- Show score
-		print("Score: " .. score, 1, 1, 15, true, 1, true)
-		print_centered("Highscore: " .. highscore, SCREEN_WIDTH_HALF-1, 1, 15, true, 1, true)
+		print_shadowed("Score: " .. score, 1, 1, 15, true, 1, true)
+		print_centered(tostring(t_game // 60), SCREEN_WIDTH_HALF-1, 1, 15, true, 2, true, true)
 		
 		-- Show Targeting Cross
 		circb(mx, my, 3, 6)
@@ -423,11 +447,12 @@ function TIC()
 		
 	else
 		-- When in doubt, fall back to the title screen
+		trace("Unknown mode \"" .. tostring(mode) .. "\", falling back to \"title\".")
 		mode = "title"
 	end
 	
 	if DEBUG then
-		print("DEBUG:\nt=" .. t .. "\nmx=" .. mx .. "\nmy=" .. my .. "\nammo=" .. tostring(ammo) .. "\ncam=" .. tostring(camera_pos), SCREEN_WIDTH-32,1,15,true,1,true)
+		print_shadowed("DEBUG:\nt=" .. t .. "\nmx=" .. mx .. "\nmy=" .. my .. "\nammo=" .. tostring(ammo) .. "\ncam=" .. tostring(camera_pos), SCREEN_WIDTH-32,1,15,true,1,true)
 	end
 	
 	-- End tick
