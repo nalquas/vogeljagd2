@@ -29,16 +29,16 @@
 
 -- Constants
 DEBUG = true
-RELEASE_DATE = "2020-08-08"
+RELEASE_DATE = "2020-08-09"
 RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
 SCREEN_HEIGHT = 136
 SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2
-GAME_WIDTH = 1200 -- SCREEN_WIDTH * 5
+GAME_WIDTH = 960 -- SCREEN_WIDTH * 4
 GAME_TIME = 3600 --60sec
 CAMERA_POS_MAX = GAME_WIDTH - SCREEN_WIDTH
-CAMERA_SPEED = 10
+CAMERA_SPEED = 5
 AMMO_SIZE = 5
 CLOUD_COUNT = 128
 INTRO_OFFSET = 60
@@ -182,7 +182,7 @@ BIRD_MAX_CLOSENESS = 3
 	end
 	
 	function render_cloud(cloud)
-		spr_scaled(cloud.id, cloud.x-(camera_pos*cloud.scale), cloud.y, 0, cloud.scale, cloud.w, cloud.h)
+		spr_scaled(cloud.id, cloud.x-(camera_pos*cloud.scale*0.25), cloud.y, 0, cloud.scale, cloud.w, cloud.h)
 	end
 -- END CLOUD FUNCTIONS
 
@@ -214,7 +214,7 @@ BIRD_MAX_CLOSENESS = 3
 		local speed_x = (0.16666667 + math.random()/6.0) * closeness -- Anywhere from 1/6 to 1/3, multiplied by closeness
 		
 		-- Set y randomly, but also based on distance
-		local y = math.random(0, math.floor(SCREEN_HEIGHT / distance) - size_y)
+		local y = math.random(0, math.floor((SCREEN_HEIGHT-32) / distance) - size_y)
 		
 		-- Decide: left or right?
 		local x
@@ -409,6 +409,11 @@ function TIC()
 				end
 				render_cloud(clouds[i])
 			end
+		end
+		
+		-- Render terrain
+		for distance=8,1,-1 do
+			map(0, 136-(distance*17), 240, 17, -0.75*(camera_pos/distance), 0, 2, 1)
 		end
 		
 		-- Render birds, one closeness layer after the other
