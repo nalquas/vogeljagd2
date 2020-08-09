@@ -142,8 +142,13 @@ BIRD_MAX_CLOSENESS = 3
 
 	-- Check if the mouse is colliding with a given object. Needs to contain the parameters x, y, size_x, size_y
 	function mouse_collision(object)
-		local mx = mx + camera_pos
-		return (mx >= object.x and mx < object.x+object.size_x and my >= object.y and my < object.y+object.size_y)
+		local mxl
+		if object.closeness == nil then
+			mxl = mx + camera_pos
+		else
+			mxl = mx + camera_pos/(BIRD_MAX_CLOSENESS+1-object.closeness)
+		end
+		return (mxl >= object.x and mxl < object.x+object.size_x and my >= object.y and my < object.y+object.size_y)
 	end
 -- END INPUT FUNCTIONS
 
@@ -223,7 +228,7 @@ BIRD_MAX_CLOSENESS = 3
 			x = -size_x -- spawn left
 		else
 			-- Go left
-			x = GAME_WIDTH -- spawn right
+			x = GAME_WIDTH - CAMERA_POS_MAX/distance -- spawn right
 			speed_x = -speed_x -- invert speed_x to go left
 		end
 		
@@ -254,7 +259,7 @@ BIRD_MAX_CLOSENESS = 3
 				sprite_offset = 0 -- dead birds don't move
 			end
 			
-			spr(bird.base_sprite + sprite_offset, bird.x - camera_pos, bird.y, 15, bird.closeness, flip, rotation, 1, 1)
+			spr(bird.base_sprite + sprite_offset, bird.x - camera_pos/(BIRD_MAX_CLOSENESS+1-bird.closeness), bird.y, 15, bird.closeness, flip, rotation, 1, 1)
 		end
 	end
 -- END BIRD FUNCTIONS
@@ -391,9 +396,7 @@ function TIC()
 		end
 		
 		-- Render sun
-		local sun_x = 200 - (camera_pos * 0.05)
-		--circ(sun_x, 15, 3, 9) --outer
-		--circ(sun_x, 15, 2, 14) -- inner
+		local sun_x = 100 - (camera_pos * 0.05)
 		spr(316, sun_x, 15, 0, 1, 0, 0, 1, 1)
 		
 		-- Render (and process) clouds
@@ -413,7 +416,7 @@ function TIC()
 		
 		-- Render terrain
 		for distance=8,1,-1 do
-			map(0, 136-(distance*17), 240, 17, -0.75*(camera_pos/distance), 0, 2, 1)
+			map(0, 136-(distance*17), 240, 17, -0.5*(camera_pos/distance), 0, 2, 1)
 		end
 		
 		-- Render birds, one closeness layer after the other
