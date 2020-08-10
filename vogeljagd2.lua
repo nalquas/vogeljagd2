@@ -348,15 +348,20 @@ function TIC()
 		end
 		
 		-- Camera movement
+		local cam_moved = 0
 		if mx < 5 or btn(2) then
 			camera_pos = camera_pos - CAMERA_SPEED
 			if camera_pos < 0 then
 				camera_pos = 0
+			else
+				cam_moved = -1
 			end
 		elseif mx > SCREEN_WIDTH - 5 or btn(3) then
 			camera_pos = camera_pos + CAMERA_SPEED
 			if camera_pos > CAMERA_POS_MAX then
 				camera_pos = CAMERA_POS_MAX
+			else
+				cam_moved = 1
 			end
 		end
 		
@@ -432,6 +437,23 @@ function TIC()
 						render_bird(birds[i])
 					end
 				end
+			end
+		end
+		
+		-- Indicate camera movement on edge of screen
+		if not (cam_moved == 0) then
+			local cam_indicator_x, cam_indicator_flip
+			if cam_moved == -1 then
+				-- moving left
+				cam_indicator_x = 0
+				cam_indicator_flip = 1
+			else
+				-- moving right
+				cam_indicator_x = SCREEN_WIDTH - 16
+				cam_indicator_flip = 0
+			end
+			for i=1,2 do
+				spr(322, cam_indicator_x, SCREEN_HEIGHT_HALF - 32 + 16*i, 0, 1, cam_indicator_flip + (i-1)*2, 0, 2, 2)
 			end
 		end
 		
