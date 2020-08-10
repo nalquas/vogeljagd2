@@ -29,7 +29,7 @@
 
 -- Constants
 DEBUG = true
-RELEASE_DATE = "2020-08-09"
+RELEASE_DATE = "2020-08-10"
 RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
@@ -37,6 +37,7 @@ SCREEN_HEIGHT = 136
 SCREEN_HEIGHT_HALF = SCREEN_HEIGHT / 2
 GAME_WIDTH = 960 -- SCREEN_WIDTH * 4
 GAME_TIME = 3600 --60sec
+GAMEOVER_TIME = 240 --4sec
 CAMERA_POS_MAX = GAME_WIDTH - SCREEN_WIDTH
 CAMERA_SPEED = 5
 AMMO_SIZE = 5
@@ -228,7 +229,7 @@ BIRD_MAX_CLOSENESS = 3
 			x = -size_x -- spawn left
 		else
 			-- Go left
-			x = GAME_WIDTH - CAMERA_POS_MAX/distance -- spawn right
+			x = SCREEN_WIDTH + CAMERA_POS_MAX/(BIRD_MAX_CLOSENESS+1-closeness) -- spawn right
 			speed_x = -speed_x -- invert speed_x to go left
 		end
 		
@@ -283,6 +284,7 @@ function prepare_game()
 	end
 	camera_pos = CAMERA_POS_MAX / 2
 	t_game = GAME_TIME
+	t_gameover = GAMEOVER_TIME
 end
 
 function TIC()
@@ -323,6 +325,9 @@ function TIC()
 		
 		-- Instructions
 		print_centered("Click to begin", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF, 15, true, 1, true, true)
+		
+		-- Highscore
+		print_centered("Current Highscore: " .. highscore, SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF+8, 15, true, 1, true, true)
 		
 		-- Credits / Copyright notice
 		print_centered("(C) Nalquas, 2020", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT-16, 15, true, 1, true, true)
@@ -368,7 +373,7 @@ function TIC()
 					birds[i].x = birds[i].x + birds[i].speed_x
 					
 					-- Out of bounds? Kill.
-					if birds[i].x < -birds[i].size_x or birds[i].x > GAME_WIDTH then
+					if birds[i].x < -birds[i].size_x or birds[i].x > SCREEN_WIDTH + CAMERA_POS_MAX/(BIRD_MAX_CLOSENESS+1-birds[i].closeness) then
 						birds[i].alive = false
 					end
 				elseif not birds[i].hit_ground then
@@ -452,16 +457,28 @@ function TIC()
 			end
 		end
 		
-		-- Show score
-		print_shadowed("Score: " .. score, 1, 1, 15, true, 1, true)
-		print_centered(tostring(t_game // 60), SCREEN_WIDTH_HALF-1, 1, 15, true, 2, true, true)
+		-- Show UI
+		print_shadowed("Highscore: " .. highscore .. "\nScore: " .. score, 1, 1, 15, true, 1, true) -- score
+		print_centered(tostring(t_game // 60), SCREEN_WIDTH_HALF-1, 1, 15, true, 2, true, true) -- timer
 		
 		-- Show Targeting Cross
 		circb(mx, my, 3, 6)
 		circ(mx, my, 1, 6)
 		
 	elseif mode == "gameover" then
+		-- Show UI
+		print_centered("Game Over", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT/3, 15, true, 2, false, true) -- game over
+		print_centered("Score: " .. score, SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF, 15, true, 1, true, true) -- score
+		print_centered("Current Highscore: " .. highscore, SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF+8, 15, true, 1, true, true) -- highscore
 		
+		-- Show time bar
+		line(0, SCREEN_HEIGHT-1, (t_gameover / GAMEOVER_TIME) * SCREEN_WIDTH, SCREEN_HEIGHT-1, 15)
+		
+		-- Process time
+		t_gameover = t_gameover - 1
+		if t_gameover < 0 then
+			mode = "title"
+		end
 	else
 		-- When in doubt, fall back to the title screen
 		trace("Unknown mode \"" .. tostring(mode) .. "\", falling back to \"title\".")
