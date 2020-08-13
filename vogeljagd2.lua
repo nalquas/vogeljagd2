@@ -126,6 +126,34 @@ BIRD_MAX_CLOSENESS = 3
 		textri(ax,ay,bx,by,cx,cy,au,av,bu,bv,cu,cv,false,colorkey)
 		textri(ax,ay,dx,dy,cx,cy,au,av,du,dv,cu,cv,false,colorkey)
 	end
+	
+	function powerline_cable(x1, y1, x2, y2, hang)
+		hang = hang or 1.0 -- hang intensity factor
+		
+		-- Simple/debug implementation:
+		--line(x1, y1, x2, y2, 6)
+		
+		-- Hanging cables:
+		local dx = x2-x1
+		local dy = y2-y1
+		for i=1,4 do
+			local y_offset1, y_offset2
+			if i == 1 then
+				y_offset1 = 0
+				y_offset2 = dy * 0.33 * hang
+			elseif i == 2 then
+				y_offset1 = dy * 0.33 * hang
+				y_offset2 = dy * 0.5 * hang
+			elseif i == 3 then
+				y_offset1 = dy * 0.5 * hang
+				y_offset2 = dy * 0.33 * hang
+			else
+				y_offset1 = dy * 0.33 * hang
+				y_offset2 = 0
+			end
+			line(x1 + dx / 4 * (i-1), y1 + dy / 4 * (i-1) - y_offset1, x1 + dx / 4 * i, y1 + dy / 4 * i - y_offset2, 15)
+		end
+	end
 -- END GRAPHICS FUNCTIONS
 
 -- BEGIN INPUT FUNCTIONS
@@ -429,13 +457,27 @@ function TIC()
 			-- Layer-specific props
 			if distance==1 then
 				-- Power line (front)
-				spr(384, 300 - 0.5*(camera_pos/distance), SCREEN_HEIGHT-128, 0, 2, 0, 0, 4, 8)
+				local x_pl = 300 - 0.5*(camera_pos/distance)
+				spr(384, x_pl, SCREEN_HEIGHT-128, 0, 2, 0, 0, 4, 8)
+				powerline_cable(x_pl+6, SCREEN_HEIGHT-126, 520+12 - 0.5*(camera_pos*2), SCREEN_HEIGHT-182, 0.75)
+				powerline_cable(x_pl+56, SCREEN_HEIGHT-126, 520+112 - 0.5*(camera_pos*2), SCREEN_HEIGHT-182, 0.75)
 			elseif distance==3 then
 				-- Power line (mid)
-				spr(384, 150 - 0.5*(camera_pos/distance), SCREEN_HEIGHT-96, 0, 1, 0, 0, 4, 8)
+				local x_pl = 150 - 0.5*(camera_pos/distance)
+				spr(384, x_pl, SCREEN_HEIGHT-96, 0, 1, 0, 0, 4, 8)
+				powerline_cable(x_pl+3, SCREEN_HEIGHT-95, 306 - 0.5*(camera_pos/1), SCREEN_HEIGHT-126, 1.0)
+				powerline_cable(x_pl+28, SCREEN_HEIGHT-95, 356 - 0.5*(camera_pos/1), SCREEN_HEIGHT-126, 1.0)
 			elseif distance==5 then
 				-- Power line (back)
-				spr(320, 125 - 0.5*(camera_pos/distance), SCREEN_HEIGHT-64, 0, 1, 0, 0, 2, 4)
+				local x_pl = 125 - 0.5*(camera_pos/distance)
+				spr(320, x_pl, SCREEN_HEIGHT-64, 0, 1, 0, 0, 2, 4)
+				powerline_cable(x_pl+1, SCREEN_HEIGHT-64, 153 - 0.5*(camera_pos/3), SCREEN_HEIGHT-95, 0.5)
+				powerline_cable(x_pl+14, SCREEN_HEIGHT-64, 178 - 0.5*(camera_pos/3), SCREEN_HEIGHT-95, 0.5)
+			elseif distance==7 then
+				local x_pl = 117 - 0.5*(camera_pos/distance)
+				spr_scaled(320, x_pl, SCREEN_HEIGHT-48, 0, 0.5, 2, 4)
+				powerline_cable(x_pl+0.5, SCREEN_HEIGHT-48, 126 - 0.5*(camera_pos/5), SCREEN_HEIGHT-64, 0.25)
+				powerline_cable(x_pl+7, SCREEN_HEIGHT-48, 139 - 0.5*(camera_pos/5), SCREEN_HEIGHT-64, 0.25)
 			end
 			
 			-- Terrain
