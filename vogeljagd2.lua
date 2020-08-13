@@ -424,14 +424,26 @@ function TIC()
 			end
 		end
 		
-		-- Render terrain
+		-- Render game content, layer by layer (from back to front)
 		for distance=8,1,-1 do
+			-- Layer-specific props
+			if distance==1 then
+				-- Power line (front)
+				spr(384, 300 - 0.5*(camera_pos/distance), SCREEN_HEIGHT-128, 0, 2, 0, 0, 4, 8)
+			elseif distance==3 then
+				-- Power line (mid)
+				spr(384, 150 - 0.5*(camera_pos/distance), SCREEN_HEIGHT-96, 0, 1, 0, 0, 4, 8)
+			elseif distance==5 then
+				-- Power line (back)
+				spr(320, 125 - 0.5*(camera_pos/distance), SCREEN_HEIGHT-64, 0, 1, 0, 0, 2, 4)
+			end
+			
+			-- Terrain
 			map(0, 136-(distance*17), 240, 17, -0.5*(camera_pos/distance), 0, 2, 1)
-		end
-		
-		-- Render birds, one closeness layer after the other
-		if #birds > 0 then
-			for closeness=1,BIRD_MAX_CLOSENESS do -- iterate through the layers
+			
+			-- Birds
+			local closeness = BIRD_MAX_CLOSENESS+1-distance
+			if #birds > 0 and closeness > 0 then
 				for i=1,#birds do -- iterate over all birds
 					if birds[i].closeness == closeness then -- only render birds from this layer
 						render_bird(birds[i])
