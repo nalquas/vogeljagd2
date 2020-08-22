@@ -29,7 +29,7 @@
 
 -- Constants
 DEBUG = true
-RELEASE_DATE = "2020-08-10"
+RELEASE_DATE = "2020-08-22"
 RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
@@ -41,6 +41,7 @@ GAMEOVER_TIME = 240 --4sec
 CAMERA_POS_MAX = GAME_WIDTH - SCREEN_WIDTH
 CAMERA_SPEED = 5
 AMMO_SIZE = 5
+AMMO_RELOAD_TIME = 180 --3sec
 CLOUD_COUNT = 128
 INTRO_OFFSET = 60
 INTRO_CUTOFF = -120
@@ -313,6 +314,7 @@ function prepare_game()
 	camera_pos = CAMERA_POS_MAX / 2
 	t_game = GAME_TIME
 	t_gameover = GAMEOVER_TIME
+	t_reload = AMMO_RELOAD_TIME
 end
 
 function TIC()
@@ -419,17 +421,26 @@ function TIC()
 		end
 		
 		-- Process shooting
-		if mdp() and ammo > 0 then
-			shake = 5 -- Shake screen for 5 ticks
-			ammo = ammo - 1
-			
-			-- Check for hits
-			for i=1,#birds do
-				if birds[i].alive and mouse_collision(birds[i]) then
-					-- Kill the bird on hit
-					birds[i].alive = false
-					score = score + (BIRD_MAX_CLOSENESS+1 - birds[i].closeness)
+		if ammo > 0 then
+			if mdp() then
+				shake = 5 -- Shake screen for 5 ticks
+				ammo = ammo - 1
+				
+				-- Check for hits
+				for i=1,#birds do
+					if birds[i].alive and mouse_collision(birds[i]) then
+						-- Kill the bird on hit
+						birds[i].alive = false
+						score = score + (BIRD_MAX_CLOSENESS+1 - birds[i].closeness)
+					end
 				end
+			end
+		else
+			-- Reload ammo
+			t_reload = t_reload - 1
+			if t_reload < 0 then
+				ammo = AMMO_SIZE
+				t_reload = AMMO_RELOAD_TIME -- Reset reload time
 			end
 		end
 		
