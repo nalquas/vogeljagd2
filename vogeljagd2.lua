@@ -375,6 +375,14 @@ function TIC()
 			mode = "gameover"
 		else
 			t_game = t_game - 1
+			if t_game%60==0 then -- Sfx: Timer ticking down
+				local note = "C-3"
+				if t_game == 0 then note = "C-5"
+				elseif t_game%600==0 then note = "D-3"
+				elseif t_game <= 180 then note = "B-4"
+				elseif t_game <= 600 then note = "F-4" end
+				sfx(0, note, -1, 0, 7, 0)
+			end
 		end
 		
 		-- Camera movement
@@ -396,7 +404,7 @@ function TIC()
 		end
 		
 		-- Spawn birds
-		if math.random() < 0.025 then
+		if math.random() < 0.015 then
 			generate_bird()
 		end
 		
@@ -546,7 +554,7 @@ function TIC()
 		
 		-- Show UI
 		print_shadowed("Highscore: " .. highscore .. "\nScore: " .. score, 1, 1, 15, true, 1, true) -- score
-		print_centered(tostring(t_game // 60), SCREEN_WIDTH_HALF-1, 1, 15, true, 2, true, true) -- timer
+		print_centered(tostring(1 + t_game // 60), SCREEN_WIDTH_HALF-1, 1, 15, true, 2, true, true) -- timer
 		
 		-- Show Targeting Cross
 		circb(mx, my, 3, 6)
