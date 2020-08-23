@@ -333,7 +333,7 @@ function TIC()
 		intro_offset = intro_offset - 1 -- Timer and, simultaneously, offset used in scanline()
 		if intro_offset > 0 then
 			-- Fade-in of sound
-			sfx(1, math.floor((1.0-(intro_offset / INTRO_OFFSET)) * 60), -1, 0, 15, 0)
+			sfx(2, math.floor((1.0-(intro_offset / INTRO_OFFSET)) * 60), -1, 0, 15, 0)
 		elseif intro_offset == 0 then
 			-- Bell sound
 			sfx(0, "B-5", -1, 0, 15, 0)

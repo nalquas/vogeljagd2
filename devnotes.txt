@@ -1,3 +1,5 @@
 Sound indexes:
-00    Timer ticking down
+00    Intro "Ding"; Timer ticking down
+01    Shooting
+02    Intro fade-in sound
 01-63 UNUSED
