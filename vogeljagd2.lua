@@ -29,7 +29,7 @@
 
 -- Constants
 DEBUG = true
-RELEASE_DATE = "2020-08-22"
+RELEASE_DATE = "2020-08-25"
 RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
@@ -433,6 +433,7 @@ function TIC()
 			if mdp() then
 				shake = 5 -- Shake screen for 5 ticks
 				ammo = ammo - 1
+				sfx(1, "B-3", 31, 1, 15, 0)
 				
 				-- Check for hits
 				for i=1,#birds do
@@ -585,7 +586,7 @@ function TIC()
 	end
 	
 	-- End tick
-	if shake > 0 then
+	if shake > 0 and t%2==0 then
 		shake = shake - 1
 	end
 	t=t+1
