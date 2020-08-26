@@ -29,7 +29,7 @@
 
 -- Constants
 DEBUG = true
-RELEASE_DATE = "2020-08-25"
+RELEASE_DATE = "2020-08-26"
 RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
@@ -46,6 +46,13 @@ CLOUD_COUNT = 128
 INTRO_OFFSET = 60
 INTRO_CUTOFF = -120
 BIRD_MAX_CLOSENESS = 3
+
+-- BEGIN HELPER FUNCTIONS
+	function round(x)
+		if x<0 then return math.ceil(x-0.5) end
+		return math.floor(x+0.5)
+	end
+-- END HELPER FUNCTIONS
 
 -- BEGIN GRAPHICS FUNCTIONS
 	function background(color)
@@ -318,6 +325,11 @@ function prepare_game()
 end
 
 function TIC()
+	if DEBUG then
+		-- Store frame start time
+		frame_start = time()
+	end
+	
 	update_mouse()
 	
 	-- Clear screen
@@ -582,7 +594,7 @@ function TIC()
 	end
 	
 	if DEBUG then
-		print_shadowed("DEBUG:\nt=" .. t .. "\nmx=" .. mx .. "\nmy=" .. my .. "\nammo=" .. tostring(ammo) .. "\ncam=" .. tostring(camera_pos), SCREEN_WIDTH-32,1,15,true,1,true)
+		print_shadowed("DEBUG:\nt=" .. t .. "\nframe=" .. round(time() - frame_start) .. "ms\nmx=" .. mx .. "\nmy=" .. my .. "\nammo=" .. tostring(ammo) .. "\ncam=" .. tostring(camera_pos), SCREEN_WIDTH-40,1,15,true,1,true)
 	end
 	
 	-- End tick
