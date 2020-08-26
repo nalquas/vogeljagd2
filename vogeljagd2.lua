@@ -40,7 +40,7 @@ GAMEOVER_TIME = 240 --4sec
 CAMERA_POS_MAX = GAME_WIDTH - SCREEN_WIDTH
 CAMERA_SPEED = 5
 AMMO_SIZE = 5
-AMMO_RELOAD_TIME = 180 --3sec
+AMMO_RELOAD_TIME = 100--180 --3sec
 CLOUD_COUNT = 128
 INTRO_OFFSET = 60
 INTRO_CUTOFF = -120
@@ -384,6 +384,7 @@ function TIC()
 		-- Handle game time
 		if t_game <= 0 then
 			mode = "gameover"
+			music() -- Stop music
 		else
 			t_game = t_game - 1
 			if t_game%60==0 then -- Sfx: Timer ticking down
@@ -457,6 +458,9 @@ function TIC()
 			end
 		else
 			-- Reload ammo
+			if t_reload == AMMO_RELOAD_TIME then
+				music(0, -1, -1, false) -- Play reload track
+			end
 			t_reload = t_reload - 1
 			if t_reload < 0 then
 				ammo = AMMO_SIZE
@@ -569,8 +573,10 @@ function TIC()
 		print_centered(tostring(1 + t_game // 60), SCREEN_WIDTH_HALF-1, 1, 15, true, 2, true, true) -- timer
 
 		-- Show Targeting Cross
-		circb(mx, my, 3, 6)
-		circ(mx, my, 1, 6)
+		local crosscolor = 6
+		if ammo <= 0 then crosscolor = 10 end
+		circb(mx, my, 3, crosscolor)
+		circ(mx, my, 1, crosscolor)
 
 	elseif mode == "gameover" then
 		-- Show UI
