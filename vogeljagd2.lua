@@ -300,11 +300,21 @@ BIRD_MAX_CLOSENESS = 3
 	end
 -- END BIRD FUNCTIONS
 
+-- BEGIN SAVE FUNCTIONS
+	function save_highscore(val)
+		pmem(0, val)
+	end
+
+	function load_highscore()
+		return pmem(0)
+	end
+-- END SAVE FUNCTIONS
+
 function init()
 	t=0
 	shake = 0
 	mode = "intro" -- Modes: "intro", "title", "game", "gameover"
-	highscore = pmem(0)
+	highscore = load_highscore()
 	intro_offset = INTRO_OFFSET
 end
 init()
@@ -383,8 +393,14 @@ function TIC()
 
 		-- Handle game time
 		if t_game <= 0 then
+			-- Time over, game over
 			mode = "gameover"
 			music() -- Stop music
+			-- Check for new highscore
+			if score > highscore then
+				highscore = score
+				save_highscore(highscore)
+			end
 		else
 			t_game = t_game - 1
 			if t_game%60==0 then -- Sfx: Timer ticking down
@@ -582,7 +598,9 @@ function TIC()
 		-- Show UI
 		print_centered("Game Over", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT/3, 15, true, 2, false, true) -- game over
 		print_centered("Score: " .. score, SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF, 15, true, 1, true, true) -- score
-		print_centered("Current Highscore: " .. highscore, SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF+8, 15, true, 1, true, true) -- highscore
+		local highscore_prefix = "Current "
+		if score >= highscore then highscore_prefix = "NEW " end
+		print_centered(highscore_prefix .. "Highscore: " .. highscore, SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF+8, 15, true, 1, true, true) -- highscore
 
 		-- Show time bar
 		line(0, SCREEN_HEIGHT-1, (t_gameover / GAMEOVER_TIME) * SCREEN_WIDTH, SCREEN_HEIGHT-1, 15)
