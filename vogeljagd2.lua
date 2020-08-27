@@ -28,7 +28,7 @@
 
 -- Constants
 DEBUG = true
-RELEASE_DATE = "2020-08-26"
+RELEASE_DATE = "2020-08-27"
 RELEASE_TARGET = "TIC-80 0.80"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
@@ -388,11 +388,11 @@ function TIC()
 		else
 			t_game = t_game - 1
 			if t_game%60==0 then -- Sfx: Timer ticking down
-				local note = "C-3"
-				if t_game == 0 then note = "C-5"
+				local note = "B-2"
+				if t_game == 0 then note = "B-4"
 				elseif t_game%600==0 then note = "D-3"
-				elseif t_game <= 180 then note = "B-4"
-				elseif t_game <= 600 then note = "F-4" end
+				elseif t_game <= 180 then note = "D-4"
+				elseif t_game <= 600 then note = "F-3" end
 				sfx(0, note, -1, 0, 7, 0)
 			end
 		end
