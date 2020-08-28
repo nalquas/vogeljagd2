@@ -27,9 +27,9 @@
 -- SOFTWARE.
 
 -- Constants
-DEBUG = true
-RELEASE_DATE = "2020-08-27"
-RELEASE_TARGET = "TIC-80 0.80"
+DEBUG = false
+RELEASE_DATE = "2020-08-28"
+RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
 SCREEN_HEIGHT = 136
@@ -228,7 +228,7 @@ BIRD_MAX_CLOSENESS = 3
 -- END CLOUD FUNCTIONS
 
 -- BEGIN BIRD FUNCTIONS
-	function add_bird(x, y, closeness, size_x, size_y, speed_x, base_sprite)
+	function add_bird(x, y, closeness, size_x, size_y, speed_x, base_sprite, spr_w, spr_h)
 		birds[#birds+1] = {
 			alive = true,
 			hit_ground = false,
@@ -238,7 +238,9 @@ BIRD_MAX_CLOSENESS = 3
 			size_x = size_x or 8,
 			size_y = size_y or 8,
 			speed_x = speed_x or 0,
-			base_sprite = base_sprite or 304
+			base_sprite = base_sprite or 304,
+			spr_w = spr_w or 1,
+			spr_h = spr_h or 1
 			}
 	end
 
@@ -247,9 +249,23 @@ BIRD_MAX_CLOSENESS = 3
 		local closeness = math.random(1, BIRD_MAX_CLOSENESS) -- (1=furthest, 3=closest)
 		local distance = BIRD_MAX_CLOSENESS + 1 - closeness -- ...the opposite
 
+		-- Is it a bird? ...is it a plane?
+		local spr_w = 1
+		local spr_h = 1
+		local base_sprite
+		if closeness == 1 and math.random() < 0.1 then
+			-- Yes, it's a plane.
+			spr_w = 5
+			base_sprite = 324
+		else
+			-- Nope, just a bird.
+			-- Select a random base sprite
+			base_sprite = 304 + math.random(0,3)*3
+		end
+
 		-- Set size based on closeness
-		local size_x = closeness * 8
-		local size_y = size_x -- square
+		local size_x = closeness * 8 * spr_w
+		local size_y = closeness * 8 * spr_h
 
 		-- Set speed based on distance
 		local speed_x = (0.16666667 + math.random()/6.0) * closeness -- Anywhere from 1/6 to 1/3, multiplied by closeness
@@ -268,34 +284,53 @@ BIRD_MAX_CLOSENESS = 3
 			speed_x = -speed_x -- invert speed_x to go left
 		end
 
-		-- Select a random base sprite
-		local base_sprite = 304 + math.random(0,3)*3
-
 		-- Commit bird
-		add_bird(x, y, closeness, size_x, size_y, speed_x, base_sprite)
+		add_bird(x, y, closeness, size_x, size_y, speed_x, base_sprite, spr_w, spr_h)
 	end
 
 	function render_bird(bird)
 		if bird.alive or not bird.hit_ground then
-			-- Direction (left/right)
 			local flip = 0
-			if bird.speed_x < 0 then
-				flip = 1
-			end
-
-			-- Dead or alive
 			local rotation = 0
-			if not bird.alive then
-				rotation = 1 -- face downwards
-			end
+			local sprite_offset
 
-			-- Animation
-			local sprite_offset = ((t/8)%3)
-			if not bird.alive then
-				sprite_offset = 0 -- dead birds don't move
-			end
+			if bird.base_sprite == 324 then
+				-- It's actually a plane, not a bird!
 
-			spr(bird.base_sprite + sprite_offset, bird.x - camera_pos/(BIRD_MAX_CLOSENESS+1-bird.closeness), bird.y, 15, bird.closeness, flip, rotation, 1, 1)
+				-- Direction (left/right)
+				if bird.speed_x > 0 then
+					flip = 1
+				end
+
+				-- Animation
+				if bird.alive then
+					sprite_offset = math.floor((t/5)%4) * 16
+				else
+					sprite_offset = 64 + math.floor((t/5)%2) * 16
+				end
+
+				spr(bird.base_sprite + sprite_offset, bird.x - camera_pos/(BIRD_MAX_CLOSENESS+1-bird.closeness), bird.y, 0, bird.closeness, flip, rotation, bird.spr_w, bird.spr_h)
+			else
+				-- It's a bird.
+
+				-- Direction (left/right)
+				if bird.speed_x < 0 then
+					flip = 1
+				end
+
+				-- Dead or alive
+				if not bird.alive then
+					rotation = 1 -- face downwards
+				end
+
+				-- Animation
+				sprite_offset = ((t/8)%3)
+				if not bird.alive then
+					sprite_offset = 0 -- dead birds don't move
+				end
+
+				spr(bird.base_sprite + sprite_offset, bird.x - camera_pos/(BIRD_MAX_CLOSENESS+1-bird.closeness), bird.y, 15, bird.closeness, flip, rotation, bird.spr_w, bird.spr_h)
+			end
 		end
 	end
 -- END BIRD FUNCTIONS
@@ -468,7 +503,15 @@ function TIC()
 					if birds[i].alive and mouse_collision(birds[i]) then
 						-- Kill the bird on hit
 						birds[i].alive = false
-						score = score + (BIRD_MAX_CLOSENESS+1 - birds[i].closeness)
+
+						-- Check if it was a bird or a plane
+						if birds[i].base_sprite == 324 then
+							-- Plane
+							score = score - 10
+						else
+							-- Bird
+							score = score + (BIRD_MAX_CLOSENESS+1 - birds[i].closeness)
+						end
 					end
 				end
 			end
