@@ -29,6 +29,7 @@
 -- Constants
 DEBUG = false
 RELEASE_DATE = "2020-08-30"
+RELEASE_NUMBER = "1.0"
 RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
@@ -367,6 +368,9 @@ function prepare_game()
 	t_gameover = GAMEOVER_TIME
 	t_reload = AMMO_RELOAD_TIME
 end
+
+-- Message in Console:
+trace("\n\n----------------------------------\n         Nalquas presents:\n         Vogeljagd 2 V" .. RELEASE_NUMBER .. "\n     Last updated: " .. RELEASE_DATE .. "\nhttps://nalquas.itch.io/vogeljagd2\n----------------------------------\n")
 
 function TIC()
 	if DEBUG then
