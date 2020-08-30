@@ -430,11 +430,14 @@ function TIC()
 		if t_game <= 0 then
 			-- Time over, game over
 			mode = "gameover"
-			music() -- Stop music
+			music() -- Stop music (reloading sound effect)
 			-- Check for new highscore
-			if score > highscore then
+			if score >= highscore then -- Simplified: Achieving equal score is also considered success.
 				highscore = score
 				save_highscore(highscore)
+				music(2, -1, -1, false) -- Play positive gameover tune
+			else
+				music(1, -1, -1, false) -- Play negative gameover tune
 			end
 		else
 			t_game = t_game - 1
