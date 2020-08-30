@@ -28,7 +28,7 @@
 
 -- Constants
 DEBUG = false
-RELEASE_DATE = "2020-08-28"
+RELEASE_DATE = "2020-08-30"
 RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
 SCREEN_WIDTH_HALF = SCREEN_WIDTH / 2
@@ -467,7 +467,7 @@ function TIC()
 		end
 
 		-- Spawn birds
-		if math.random() < 0.015 then
+		if math.random() < 0.02 then
 			generate_bird()
 		end
 
