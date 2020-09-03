@@ -1,8 +1,8 @@
 -- title:  Vogeljagd 2
--- author: Nalquas
+-- author: nalquas
 -- desc:   Shoot birds. Inspired by Moorhuhn.
 -- script: lua
--- saveid: TIC_Vogeljagd2_dev
+-- saveid: TIC_Vogeljagd2
 
 -- MIT License
 --
