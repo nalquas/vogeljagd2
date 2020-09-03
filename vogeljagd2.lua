@@ -28,7 +28,7 @@
 
 -- Constants
 DEBUG = false
-RELEASE_DATE = "2020-08-30"
+RELEASE_DATE = "2020-09-03"
 RELEASE_NUMBER = "1.0"
 RELEASE_TARGET = "TIC-80 0.70.6"
 SCREEN_WIDTH = 240
@@ -160,6 +160,71 @@ BIRD_MAX_CLOSENESS = 3
 				y_offset2 = 0
 			end
 			line(x1 + dx / 4 * (i-1), y1 + dy / 4 * (i-1) - y_offset1, x1 + dx / 4 * i, y1 + dy / 4 * i - y_offset2, 15)
+		end
+	end
+
+	function render_pipeline()
+		-- Main render pipeline
+
+		-- Render sun
+		local sun_x = 100 - (camera_pos * 0.05)
+		spr(316, sun_x, 15, 0, 1, 0, 0, 1, 1)
+
+		-- Render (and process) clouds
+		if #clouds > 0 then
+			for i=1,#clouds do
+				clouds[i].x = clouds[i].x + clouds[i].speed_x
+				local cloud_width = clouds[i].scale * 8 * clouds[i].w
+				local cloud_x_max = (GAME_WIDTH + SCREEN_WIDTH) * (clouds[i].scale + 0.08) + cloud_width -- DON'T TOUCH X_MAX!
+				if clouds[i].x > cloud_x_max then
+					clouds[i].x = -cloud_width
+				elseif clouds[i].x < -cloud_width then
+					clouds[i].x = cloud_x_max
+				end
+				render_cloud(clouds[i])
+			end
+		end
+
+		-- Render game content, layer by layer (from back to front)
+		for distance=8,1,-1 do
+			-- Layer-specific props
+			if distance==1 then
+				-- Power line (front)
+				local x_pl = 300 - 0.5*(camera_pos/distance)
+				spr(384, x_pl, SCREEN_HEIGHT-128, 0, 2, 0, 0, 4, 8)
+				powerline_cable(x_pl+6, SCREEN_HEIGHT-126, 520+12 - 0.5*(camera_pos*2), SCREEN_HEIGHT-182, 0.75)
+				powerline_cable(x_pl+56, SCREEN_HEIGHT-126, 520+112 - 0.5*(camera_pos*2), SCREEN_HEIGHT-182, 0.75)
+			elseif distance==3 then
+				-- Power line (mid)
+				local x_pl = 150 - 0.5*(camera_pos/distance)
+				spr(384, x_pl, SCREEN_HEIGHT-96, 0, 1, 0, 0, 4, 8)
+				powerline_cable(x_pl+3, SCREEN_HEIGHT-95, 306 - 0.5*(camera_pos/1), SCREEN_HEIGHT-126, 1.0)
+				powerline_cable(x_pl+28, SCREEN_HEIGHT-95, 356 - 0.5*(camera_pos/1), SCREEN_HEIGHT-126, 1.0)
+			elseif distance==5 then
+				-- Power line (back)
+				local x_pl = 125 - 0.5*(camera_pos/distance)
+				spr(320, x_pl, SCREEN_HEIGHT-64, 0, 1, 0, 0, 2, 4)
+				powerline_cable(x_pl+1, SCREEN_HEIGHT-64, 153 - 0.5*(camera_pos/3), SCREEN_HEIGHT-95, 0.5)
+				powerline_cable(x_pl+14, SCREEN_HEIGHT-64, 178 - 0.5*(camera_pos/3), SCREEN_HEIGHT-95, 0.5)
+			elseif distance==7 then
+				local x_pl = 117 - 0.5*(camera_pos/distance)
+				spr_scaled(320, x_pl, SCREEN_HEIGHT-48, 0, 0.5, 2, 4)
+				powerline_cable(x_pl+0.5, SCREEN_HEIGHT-48, 126 - 0.5*(camera_pos/5), SCREEN_HEIGHT-64, 0.25)
+				powerline_cable(x_pl+7, SCREEN_HEIGHT-48, 139 - 0.5*(camera_pos/5), SCREEN_HEIGHT-64, 0.25)
+			end
+
+			-- Terrain
+			map(0, 136-(distance*17), 240, 17, -0.5*(camera_pos/distance), 0, 2, 1)
+
+			-- Birds
+			local closeness = BIRD_MAX_CLOSENESS+1-distance
+			if #birds > 0 and closeness > 0 then
+				for i=1,#birds do -- iterate over all birds
+					if birds[i].closeness == closeness then -- only render birds from this layer
+						render_bird(birds[i])
+					end
+				end
+			end
 		end
 	end
 -- END GRAPHICS FUNCTIONS
@@ -352,6 +417,10 @@ function init()
 	mode = "intro" -- Modes: "intro", "title", "game", "gameover"
 	highscore = load_highscore()
 	intro_offset = INTRO_OFFSET
+	clouds = {}
+	for i = 1, CLOUD_COUNT do
+		generate_cloud(0.25 + 0.75 * (i / CLOUD_COUNT))
+	end
 end
 init()
 
@@ -359,10 +428,6 @@ function prepare_game()
 	score = 0
 	ammo = AMMO_SIZE
 	birds = {}
-	clouds = {}
-	for i = 1, CLOUD_COUNT do
-		generate_cloud(0.25 + 0.75 * (i / CLOUD_COUNT))
-	end
 	camera_pos = CAMERA_POS_MAX / 2
 	t_game = GAME_TIME
 	t_gameover = GAMEOVER_TIME
@@ -405,8 +470,16 @@ function TIC()
 			for i=0,3 do
 				sfx(-1, 0, -1, i)
 			end
+			-- Prepare game content for title screen background
+			prepare_game()
 		end
 	elseif mode == "title" then
+		-- Move background
+		camera_pos = CAMERA_POS_MAX / 2 + (CAMERA_POS_MAX / 3) * math.cos(t / 60)
+
+		-- Render game in background
+		render_pipeline()
+
 		-- Version
 		print_shadowed("Version as of " .. RELEASE_DATE .. "\nfor " .. RELEASE_TARGET, 1, 1, 15, true, 1, true)
 
@@ -534,66 +607,8 @@ function TIC()
 			end
 		end
 
-		-- Render sun
-		local sun_x = 100 - (camera_pos * 0.05)
-		spr(316, sun_x, 15, 0, 1, 0, 0, 1, 1)
-
-		-- Render (and process) clouds
-		if #clouds > 0 then
-			for i=1,#clouds do
-				clouds[i].x = clouds[i].x + clouds[i].speed_x
-				local cloud_width = clouds[i].scale * 8 * clouds[i].w
-				local cloud_x_max = (GAME_WIDTH + SCREEN_WIDTH) * (clouds[i].scale + 0.08) + cloud_width -- DON'T TOUCH X_MAX!
-				if clouds[i].x > cloud_x_max then
-					clouds[i].x = -cloud_width
-				elseif clouds[i].x < -cloud_width then
-					clouds[i].x = cloud_x_max
-				end
-				render_cloud(clouds[i])
-			end
-		end
-
-		-- Render game content, layer by layer (from back to front)
-		for distance=8,1,-1 do
-			-- Layer-specific props
-			if distance==1 then
-				-- Power line (front)
-				local x_pl = 300 - 0.5*(camera_pos/distance)
-				spr(384, x_pl, SCREEN_HEIGHT-128, 0, 2, 0, 0, 4, 8)
-				powerline_cable(x_pl+6, SCREEN_HEIGHT-126, 520+12 - 0.5*(camera_pos*2), SCREEN_HEIGHT-182, 0.75)
-				powerline_cable(x_pl+56, SCREEN_HEIGHT-126, 520+112 - 0.5*(camera_pos*2), SCREEN_HEIGHT-182, 0.75)
-			elseif distance==3 then
-				-- Power line (mid)
-				local x_pl = 150 - 0.5*(camera_pos/distance)
-				spr(384, x_pl, SCREEN_HEIGHT-96, 0, 1, 0, 0, 4, 8)
-				powerline_cable(x_pl+3, SCREEN_HEIGHT-95, 306 - 0.5*(camera_pos/1), SCREEN_HEIGHT-126, 1.0)
-				powerline_cable(x_pl+28, SCREEN_HEIGHT-95, 356 - 0.5*(camera_pos/1), SCREEN_HEIGHT-126, 1.0)
-			elseif distance==5 then
-				-- Power line (back)
-				local x_pl = 125 - 0.5*(camera_pos/distance)
-				spr(320, x_pl, SCREEN_HEIGHT-64, 0, 1, 0, 0, 2, 4)
-				powerline_cable(x_pl+1, SCREEN_HEIGHT-64, 153 - 0.5*(camera_pos/3), SCREEN_HEIGHT-95, 0.5)
-				powerline_cable(x_pl+14, SCREEN_HEIGHT-64, 178 - 0.5*(camera_pos/3), SCREEN_HEIGHT-95, 0.5)
-			elseif distance==7 then
-				local x_pl = 117 - 0.5*(camera_pos/distance)
-				spr_scaled(320, x_pl, SCREEN_HEIGHT-48, 0, 0.5, 2, 4)
-				powerline_cable(x_pl+0.5, SCREEN_HEIGHT-48, 126 - 0.5*(camera_pos/5), SCREEN_HEIGHT-64, 0.25)
-				powerline_cable(x_pl+7, SCREEN_HEIGHT-48, 139 - 0.5*(camera_pos/5), SCREEN_HEIGHT-64, 0.25)
-			end
-
-			-- Terrain
-			map(0, 136-(distance*17), 240, 17, -0.5*(camera_pos/distance), 0, 2, 1)
-
-			-- Birds
-			local closeness = BIRD_MAX_CLOSENESS+1-distance
-			if #birds > 0 and closeness > 0 then
-				for i=1,#birds do -- iterate over all birds
-					if birds[i].closeness == closeness then -- only render birds from this layer
-						render_bird(birds[i])
-					end
-				end
-			end
-		end
+		-- Render everything layer by layer
+		render_pipeline()
 
 		-- Indicate camera movement on edge of screen
 		if not (cam_moved == 0) then
@@ -645,6 +660,8 @@ function TIC()
 		circ(mx, my, 1, crosscolor)
 
 	elseif mode == "gameover" then
+		render_pipeline()
+
 		-- Show UI
 		print_centered("Game Over", SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT/3, 15, true, 2, false, true) -- game over
 		print_centered("Score: " .. score, SCREEN_WIDTH_HALF-1, SCREEN_HEIGHT_HALF, 15, true, 1, true, true) -- score
@@ -659,11 +676,13 @@ function TIC()
 		t_gameover = t_gameover - 1
 		if t_gameover < 0 then
 			mode = "title"
+			prepare_game()
 		end
 	else
 		-- When in doubt, fall back to the title screen
 		trace("Unknown mode \"" .. tostring(mode) .. "\", falling back to \"title\".")
 		mode = "title"
+		prepare_game()
 	end
 
 	if DEBUG then
