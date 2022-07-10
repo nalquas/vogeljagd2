@@ -1,5 +1,5 @@
 # Vogeljagd 2
-Vogeljagd 2 is a game about shooting birds from the sky, made for the [TIC-80 fantasy console](https://tic.computer/).
+Vogeljagd 2 is a game about shooting birds from the sky, made for the [TIC-80 fantasy console](https://tic80.com/).
 
 ![Gameplay Demonstration](media/gameplay.gif)
 
@@ -9,7 +9,7 @@ Inspired by [Moorhuhn](https://en.wikipedia.org/wiki/Moorhuhn) and [Duck Hunt](h
 You have the following options:
 
 - Get it from [itch.io](https://nalquas.itch.io/vogeljagd2)
-- Get it from [tic.computer](https://tic.computer/play?cart=1388)
+- Get it from [tic80.com](https://tic80.com/play?cart=1388)
 - Get it from [GitHub](https://github.com/nalquas/vogeljagd2/releases)
 
 ## How to play
