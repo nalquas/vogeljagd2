@@ -22,9 +22,10 @@ Use your mouse to aim at the birds, then pull the trigger.
 
 To move the camera, move your mouse towards the edge of the screen or use your directional keys.
 
-## Installation instructions
-Detailed installation instructions can be found in the `readme.txt` included in each release of this game.
+## How to install
+Assuming you have TIC-80 installed, completing the following steps will install and run the game:
 
-In general, add the cartridge to your TIC-80 installation, load it and run it.
-
-Vogeljagd 2 is intended for use with TIC-80 version 0.70.6 or above.
+- Run TIC-80
+- Type `folder` to open your TIC-80 directory
+- Copy `vogeljagd2.lua` into the folder
+- Type `load vogeljagd2.lua`, then `run`
